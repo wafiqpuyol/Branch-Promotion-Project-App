@@ -44,15 +44,47 @@ jobs:
           sed -i "s|image: .*/${{ secrets.DOCKERHUB_USERNAME }}:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/Branch-Promotion-Project-config:${{ github.sha }}|" \
             overlays/staging/deployment-patches.yaml
 
-      - name: Commit and Push Changes to Infra Repo
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.CONFIG_REPO_TOKEN }}
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          if ! git diff-index --quiet HEAD; then
-            git add overlays/staging/deployment-patches.yaml
-            git commit -m "chore(staging): update image to ${{ github.sha }} [skip ci]"
-            git push origin main
-          else
-            echo "No changes detected in manifest. Skipping commit."
-          fi
+          BRANCH="promote/dev-to-staging-${{ github.sha }}"
+          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/branch_promotion_app:${{ github.sha }}"
+          TAG="${{ github.sha }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "$BRANCH"
+          git add overlays/staging/deployment-patches.yaml
+          git commit -m "chore: promote staging image ${TAG} to production"
+          git push -u origin "$BRANCH"
+
+          PR_BODY=$(cat <<EOF
+          ## Automated Production Promotion Request
+
+          This pull request promotes the current **staging** image to **production**.
+
+          | Field | Value |
+          | --- | --- |
+          | Image | \`${IMAGE}\` |
+          | Tag | \`${TAG}\` |
+          | Target | \`overlays/staging/deployment-patches.yaml\` |
+          | Triggered by | @${{ github.actor }} |
+          | Workflow | Promote Dev to Staging |
+
+          ### Notes
+          - Review the staging environment before merging.
+          - Merging this PR will update the staging overlay image tag.
+          EOF
+          )
+
+          # Strip common leading indentation from the heredoc body
+          PR_BODY=$(echo "$PR_BODY" | sed 's/^          //')
+
+          gh pr create \
+            --repo wafiqpuyol/Branch-Promotion-Project-config \
+            --base main \
+            --head "$BRANCH" \
+            --title "Automated Staging Promotion Request: ${TAG}" \
+            --body "$PR_BODY"
