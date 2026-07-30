@@ -42,7 +42,7 @@ jobs:
       - name: Update Image Tag in Staging Overlay
         run: |
           sed -i "s|image: .*/${{ secrets.DOCKERHUB_USERNAME }}:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/Branch-Promotion-Project-config:${{ github.sha }}|" \
-            overlays/staging/deployment-patches.yaml
+            overlays/staging/deployment-patches.yml
 
       - name: Create Pull Request
         env:
@@ -56,7 +56,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git checkout -b "$BRANCH"
-          git add overlays/staging/deployment-patches.yaml
+          git add overlays/staging/deployment-patches.yml
           git commit -m "chore: promote staging image ${TAG} to production"
           git push -u origin "$BRANCH"
 
@@ -69,7 +69,7 @@ jobs:
           | --- | --- |
           | Image | \`${IMAGE}\` |
           | Tag | \`${TAG}\` |
-          | Target | \`overlays/staging/deployment-patches.yaml\` |
+          | Target | \`overlays/staging/deployment-patches.yml\` |
           | Triggered by | @${{ github.actor }} |
           | Workflow | Promote Dev to Staging |
 
