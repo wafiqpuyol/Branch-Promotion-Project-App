@@ -41,8 +41,8 @@ jobs:
 
       - name: Update Image Tag in Staging Overlay
         run: |
-          sed -i "s|image: .*/${{ secrets.DOCKERHUB_USERNAME }}:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/Branch-Promotion-Project-config:${{ github.sha }}|" \
-            overlays/staging/deployment-patches.yml
+          sed -i "s|image: ${{ secrets.DOCKERHUB_USERNAME }}/branch_promotion_app:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/branch_promotion_app:${{ github.sha }}|" \
+             overlays/staging/deployment-patches.yml
 
       - name: Create Pull Request
         env:
@@ -84,7 +84,7 @@ jobs:
 
           gh pr create \
             --repo wafiqpuyol/Branch-Promotion-Project-config \
-            --base main \
+            --base master \
             --head "$BRANCH" \
             --title "Automated Staging Promotion Request: ${TAG}" \
             --body "$PR_BODY"
