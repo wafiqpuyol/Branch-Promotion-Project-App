@@ -3,7 +3,7 @@ name: Build & Update Staging GitOps Config
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   build-and-push:
