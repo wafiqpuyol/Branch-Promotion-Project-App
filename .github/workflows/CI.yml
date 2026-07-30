@@ -37,7 +37,7 @@ jobs:
         with:
           repository: 'wafiqpuyol/Branch-Promotion-Project-config'
           token: ${{ secrets.CONFIG_REPO_TOKEN }}
-          ref: 'main'
+          ref: 'master'
 
       - name: Update Image Tag in Staging Overlay
         run: |
