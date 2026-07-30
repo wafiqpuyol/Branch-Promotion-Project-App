@@ -7,7 +7,7 @@ app.get("/", (req, res) => {
     res.json({
         environment: process.env.ENV_NAME,
         version: "6.0.0",
-        message: `Hello from ${process.env.ENV_NAME}`,
+        message: `Hello there ${process.env.ENV_NAME}`,
     });
 });
 
