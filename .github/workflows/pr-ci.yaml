@@ -1,0 +1,50 @@
+name: PR CI
+
+on:
+    pull_request:
+        branches: ["develop"]
+
+jobs:
+    preview-env:
+        name: Spinning PR Preview Environment
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Application Code
+              uses: actions/checkout@v4
+            - name: Delete PR tag from Docker Hub
+              continue-on-error: true # Don't fail if package doesn't exist yet
+              env:
+                DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+                DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+                REPOSITORY: 'preview-env'
+                TAG: pr-${{ github.event.number }}
+              run: |
+                    # 1. Authenticate and get a JWT token
+                    TOKEN=$(curl -s -H "Content-Type: application/json" \
+                    -X POST -d '{"username": "'$DOCKERHUB_USERNAME'", "password": "'$DOCKERHUB_TOKEN'"}' \
+                    https://hub.docker.com/v2/users/login | jq -r .token)
+
+                    # 2. Issue the DELETE request to the Docker Hub API
+                    curl -s -f -X DELETE \
+                    -H "Authorization: JWT $TOKEN" \
+                    "https://hub.docker.com/v2/repositories/$DOCKERHUB_USERNAME/$REPOSITORY/tags/$TAG/"
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                username: ${{ secrets.DOCKERHUB_USERNAME }}
+                password: ${{ secrets.DOCKERHUB_TOKEN }}
+            - name: Set short SHA
+              id: vars
+              run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+            - name: Build and Push Docker Image
+              uses: docker/build-push-action@v5
+              with:
+                context: .
+                push: true
+                tags: |
+                  ${{ secrets.DOCKERHUB_USERNAME }}/preview-env:pr-${{ github.event.number }} 
+
+            
+    

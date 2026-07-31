@@ -1,0 +1,33 @@
+name: PR Workflow
+
+on:
+    push:
+        branches: ["feat-*", "fix-*", "chor-*"]
+        paths: 
+          - "./**"
+          - ".github/workflows/feature-ci.yml"
+
+
+jobs:
+    pr-check:
+        name: Checking PR
+        runs-on: ubuntu-latest
+        permissions:
+          contents: read
+          packages: write
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
+              with:
+                fetch-depth: 0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                node-version: '22'
+
+            - name: Install Dependencies
+              run: npm ci
+
+            - name: Check PR
+              run: echo 'PR Check'
