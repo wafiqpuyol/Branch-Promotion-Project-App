@@ -6,7 +6,7 @@ const app = express();
 app.get("/", (req, res) => {
     res.json({
         environment: process.env.ENV_NAME,
-        version: "7.0.0",
+        version: "8 .0.0",
         message: `Hello there, this is wafiq the eagle watching on ${process.env.ENV_NAME}`,
     });
 });
