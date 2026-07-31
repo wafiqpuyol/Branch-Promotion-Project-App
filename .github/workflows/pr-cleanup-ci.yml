@@ -1,0 +1,36 @@
+name: Pull Request Cleanup
+
+on:
+  pull_request:
+    branches: ["develop"]
+    types: [closed]
+
+jobs:
+  delete-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete PR image tag from Docker Hub
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          REPOSITORY: 'service-foundry-web'
+          TAG: pr-${{ github.event.number }}
+        run: |
+          echo "Authenticating with Docker Hub..."
+          TOKEN=$(curl -s -H "Content-Type: application/json" \
+            -X POST -d '{"username": "'$DOCKERHUB_USERNAME'", "password": "'$DOCKERHUB_TOKEN'"}' \
+            https://hub.docker.com/v2/users/login | jq -r .token)
+
+          if [ "$TOKEN" == "null" ] || [ -z "$TOKEN" ]; then
+            echo "Authentication failed. Check your secrets."
+            exit 1
+          fi
+
+          echo "Deleting tag $TAG from $DOCKERHUB_USERNAME/$REPOSITORY..."
+          
+          # Delete the tag (the '|| true' ensures the workflow doesn't crash if the tag was already deleted)
+          curl -s -f -X DELETE \
+            -H "Authorization: JWT $TOKEN" \
+            "https://hub.docker.com/v2/repositories/$DOCKERHUB_USERNAME/$REPOSITORY/tags/$TAG/" || true
+            
+          echo "Cleanup complete."
