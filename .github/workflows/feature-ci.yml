@@ -2,7 +2,7 @@ name: PR Workflow
 
 on:
     push:
-        branches: ["feat-*", "fix-*", "chor-*"]
+        branches: ["feat/*", "fix/*", "chore/*"]
         paths: 
           - "./**"
           - ".github/workflows/feature-ci.yml"
